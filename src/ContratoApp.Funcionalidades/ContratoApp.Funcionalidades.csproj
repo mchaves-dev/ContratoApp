@@ -6,4 +6,39 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Clientes\AtualizarCliente\" />
+    <Folder Include="Clientes\ObterAtivos\" />
+    <Folder Include="Clientes\ObterPorPeriodo\" />
+    <Folder Include="Clientes\ObterPorId\" />
+    <Folder Include="Contrato\Atualizar\" />
+    <Folder Include="Contrato\Criar\" />
+    <Folder Include="Contrato\ObterAtivos\" />
+    <Folder Include="Contrato\ObterPorId\" />
+    <Folder Include="Contrato\ObterPorPeriodo\" />
+    <Folder Include="OrdemServicoItem\AtualizarItem\" />
+    <Folder Include="OrdemServicoItem\AdicionarItem\" />
+    <Folder Include="OrdemServicoItem\ObterPorOrdemServico\" />
+    <Folder Include="OrdemServicoItem\ObterPorId\" />
+    <Folder Include="OrdemServicoItem\RemoverItem\" />
+    <Folder Include="OrdemServico\Atualizar\" />
+    <Folder Include="OrdemServico\Criar\" />
+    <Folder Include="OrdemServico\Item\AdicionarItem\" />
+    <Folder Include="OrdemServico\Item\ObterPorId\" />
+    <Folder Include="OrdemServico\Item\RemoverItem\" />
+    <Folder Include="OrdemServico\ObterAtivos\" />
+    <Folder Include="OrdemServico\ObterPorId\" />
+    <Folder Include="OrdemServico\ObterPorPeriodo\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentResults" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ContratoApp.Aplicacao\ContratoApp.Aplicacao.csproj" />
+    <ProjectReference Include="..\ContratoApp.Dominio\ContratoApp.Dominio.csproj" />
+    <ProjectReference Include="..\ContratoApp.Infra\ContratoApp.Infra.csproj" />
+  </ItemGroup>
+
 </Project>

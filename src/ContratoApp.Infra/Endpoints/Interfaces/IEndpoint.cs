@@ -2,7 +2,7 @@
 
 namespace ContratoApp.Infra.Endpoints.Interfaces;
 
-internal interface IEndpoint
+public interface IEndpoint
 {
-    void MapEndpoint(IEndpointRouteBuilder app);
+	void MapEndpoint(IEndpointRouteBuilder app);
 }
