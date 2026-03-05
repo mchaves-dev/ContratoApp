@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="ContratoApp.Api/ContratoApp.Api.csproj" />
+  <Project Path="ContratoApp.Aplicacao/ContratoApp.Aplicacao.csproj" Id="bdf7c16b-1b30-4595-9882-91df96e45da2" />
+  <Project Path="ContratoApp.Dominio/ContratoApp.Dominio.csproj" />
+  <Project Path="ContratoApp.Funcionalidades/ContratoApp.Funcionalidades.csproj" Id="60127639-b233-4a00-bc56-6e60987c51bc" />
+  <Project Path="ContratoApp.Infra/ContratoApp.Infra.csproj" Id="db5dc757-8023-4af8-8e5f-797b4c1b5dfa" />
+</Solution>
