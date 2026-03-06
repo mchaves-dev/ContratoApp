@@ -1,0 +1,63 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="_theme" IsDarkMode="true" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout Class="app-shell">
+    <MudAppBar Elevation="0" Color="Color.Transparent" Dense="true" Class="topbar">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
+        <MudText Typo="Typo.subtitle1">ContratoApp</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Outlined.LightMode" Color="Color.Inherit" />
+        <MudIconButton Icon="@Icons.Material.Outlined.Notifications" Color="Color.Inherit" />
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="_drawerOpen" Variant="DrawerVariant.Responsive" Elevation="0" Class="side-drawer">
+        <MudNavMenu Class="pt-3">
+            <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Resumo</MudNavLink>
+            <MudNavLink Href="contratos" Icon="@Icons.Material.Filled.ReceiptLong">Cobranças</MudNavLink>
+            <MudNavLink Href="clientes" Icon="@Icons.Material.Filled.People">Clientes</MudNavLink>
+            <MudNavLink Href="ordens-servico" Icon="@Icons.Material.Filled.Build">Ordens</MudNavLink>
+            <MudNavLink Href="itens-os" Icon="@Icons.Material.Filled.ViewList">Itens OS</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.False" Class="main-content pa-4">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+
+    private readonly MudTheme _theme = new()
+    {
+        PaletteDark = new PaletteDark
+        {
+            Background = "#07172A",
+            Surface = "#14243A",
+            AppbarBackground = "#112139",
+            DrawerBackground = "#0f1d32",
+            Primary = "#3EA0FF",
+            Secondary = "#00D084",
+            Info = "#56B4FF",
+            Success = "#00C67A",
+            Warning = "#FFB946",
+            Error = "#FF5656",
+            TextPrimary = "#F1F7FF",
+            TextSecondary = "#9FB4CF",
+            ActionDefault = "#9FB4CF",
+            ActionDisabled = "#5A6E89"
+        },
+        LayoutProperties = new LayoutProperties
+        {
+            DefaultBorderRadius = "14px"
+        }
+    };
+
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+}

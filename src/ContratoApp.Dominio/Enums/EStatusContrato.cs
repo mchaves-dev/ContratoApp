@@ -7,6 +7,7 @@ public enum EStatusContrato
     Atrasado = 2,
     Recebido = 3,
     Agendado = 4,
-    Inativo = 4,
-    Ativo = 4
+    Inativo = 5,
+    Ativo = 6
 }
+

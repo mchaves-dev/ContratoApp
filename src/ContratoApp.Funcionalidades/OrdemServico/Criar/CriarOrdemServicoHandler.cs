@@ -1,8 +1,9 @@
-using ContratoApp.Dominio.Events;
+﻿using ContratoApp.Dominio.Events;
 using ContratoApp.Dominio.Enums;
 using ContratoApp.Dominio.Handlers;
 using ContratoApp.Dominio.ValueObjects;
 using ContratoApp.Funcionalidades.Clientes;
+using ContratoApp.Funcionalidades.Compartilhado.Status;
 using ContratoApp.Funcionalidades.Compartilhado.Validacoes;
 using ContratoApp.Funcionalidades.OrdemServico.Compartilhado.Response;
 using ContratoApp.Infra.Database;
@@ -37,14 +38,14 @@ public sealed class CriarOrdemServicoHandler(AppDbContext dbContext, IEventPubli
             .ConfigureAwait(false);
 
         if (!clienteExiste)
-            return Result.Fail("Cliente n�o encontrado.");
+            return Result.Fail("Cliente não encontrado.");
 
         var ordemServico = new Dominio.Entities.OrdemServico
         {
             IdCliente = request.IdCliente,
             DataAbertura = request.DataAbertura,
             DataFechamento = request.DataFechamento,
-            Status = request.Status,
+            Status = StatusClassifier.ClassificarOrdemServico(request.DataAbertura, request.DataFechamento, request.Status),
             Observacoes = Observacao.Criar(request.Observacoes ?? string.Empty)
         };
 
@@ -64,3 +65,5 @@ public sealed class CriarOrdemServicoHandler(AppDbContext dbContext, IEventPubli
             ordemServico.AtualizadaEmUtc));
     }
 }
+
+

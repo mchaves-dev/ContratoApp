@@ -1,0 +1,132 @@
+﻿@page "/itens-os"
+@inject ContratoApp.Web.Services.ContratoApiClient Api
+
+<PageTitle>Itens de OS</PageTitle>
+
+<div class="os-center">
+    <MudText Typo="Typo.h4" Class="mb-3">Itens por Ordem de Serviço</MudText>
+
+    <MudPaper Class="search-panel pa-3 mb-3" Elevation="0">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudTextField T="string" @bind-Value="_ordemIdTexto" Placeholder="Guid da ordem de serviço" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="flex-grow-1" />
+            <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="CarregarItensAsync">Buscar</MudButton>
+        </MudStack>
+    </MudPaper>
+
+    <MudGrid>
+        <MudItem xs="12" md="5">
+            <MudPaper Class="pa-4 form-panel" Elevation="0">
+                <MudText Typo="Typo.h6" Class="mb-3">Novo item</MudText>
+                <MudStack Spacing="2">
+                    <MudTextField T="string" Label="Descrição" @bind-Value="_novo.Descricao" Variant="Variant.Outlined" />
+                    <MudNumericField T="int" Label="Quantidade" @bind-Value="_novo.Quantidade" Variant="Variant.Outlined" />
+                    <MudNumericField T="decimal" Label="Valor Unitário" @bind-Value="_novo.ValorUnitario" Variant="Variant.Outlined" />
+                    <MudSelect T="int" Label="Tipo" @bind-Value="_novo.Tipo" Variant="Variant.Outlined">
+                        <MudSelectItem Value="1">Mão de Obra</MudSelectItem>
+                        <MudSelectItem Value="2">Peça</MudSelectItem>
+                    </MudSelect>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AdicionarAsync">Adicionar</MudButton>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="7">
+            <MudPaper Class="pa-4 data-panel" Elevation="0">
+                <MudText Typo="Typo.h6" Class="mb-2">Itens</MudText>
+                <MudTable Items="_itens" Dense="true" Hover="true">
+                    <HeaderContent>
+                        <MudTh>Descrição</MudTh>
+                        <MudTh>Qtd</MudTh>
+                        <MudTh>Valor Unit.</MudTh>
+                        <MudTh>Tipo</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Descricao</MudTd>
+                        <MudTd>@context.Quantidade</MudTd>
+                        <MudTd>@FormatMoeda(context.ValorUnitario)</MudTd>
+                        <MudTd>@TipoLabel(context.Tipo)</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</div>
+
+@if (_errors.Count > 0)
+{
+    <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">
+        @foreach (var error in _errors)
+        {
+            <div>@error</div>
+        }
+    </MudAlert>
+}
+
+@code {
+    private List<string> _errors = [];
+    private List<ContratoApp.Web.Models.OrdemServicoItemResponse> _itens = [];
+    private string _ordemIdTexto = string.Empty;
+    private NovoItemModel _novo = new();
+
+    private async Task CarregarItensAsync()
+    {
+        _errors.Clear();
+        if (!Guid.TryParse(_ordemIdTexto, out var ordemId))
+        {
+            _errors.Add("Informe um Guid válido de ordem de serviço.");
+            return;
+        }
+
+        _novo.IdOrdemServico = ordemId;
+        _itens = (await Api.ObterItensPorOrdemServicoAsync(ordemId)).ToList();
+    }
+
+    private async Task AdicionarAsync()
+    {
+        _errors.Clear();
+
+        if (_novo.IdOrdemServico == Guid.Empty)
+        {
+            _errors.Add("Busque uma ordem de serviço antes de adicionar itens.");
+            return;
+        }
+
+        var result = await Api.AdicionarItemAsync(new ContratoApp.Web.Models.AdicionarOrdemServicoItemRequest(
+            _novo.IdOrdemServico,
+            _novo.Descricao,
+            _novo.Quantidade,
+            _novo.ValorUnitario,
+            _novo.Tipo));
+
+        if (!result.Success)
+        {
+            _errors = result.Errors.ToList();
+            return;
+        }
+
+        _novo.Descricao = string.Empty;
+        _novo.Quantidade = 1;
+        _novo.ValorUnitario = 0;
+        _novo.Tipo = 1;
+        await CarregarItensAsync();
+    }
+
+    private static string FormatMoeda(decimal valor)
+        => string.Format(new System.Globalization.CultureInfo("pt-BR"), "{0:C}", valor);
+
+    private static string TipoLabel(int tipo) => tipo switch
+    {
+        1 => "Mão de Obra",
+        2 => "Peça",
+        _ => "Outro"
+    };
+
+    private sealed class NovoItemModel
+    {
+        public Guid IdOrdemServico { get; set; }
+        public string Descricao { get; set; } = string.Empty;
+        public int Quantidade { get; set; } = 1;
+        public decimal ValorUnitario { get; set; }
+        public int Tipo { get; set; } = 1;
+    }
+}

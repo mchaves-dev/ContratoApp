@@ -1,0 +1,234 @@
+﻿@page "/contratos"
+@inject ContratoApp.Web.Services.ContratoApiClient Api
+
+<PageTitle>Cobranças</PageTitle>
+
+<MudText Typo="Typo.h4">Cobranças</MudText>
+<MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">@DateTime.Now.ToString("MMMM yyyy", new System.Globalization.CultureInfo("pt-BR"))</MudText>
+
+<MudPaper Class="search-panel pa-3 mb-3" Elevation="0">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudTextField T="string" @bind-Value="_busca" Placeholder="Buscar cliente por nome..." Variant="Variant.Outlined" Immediate="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="flex-grow-1" />
+        <MudIconButton Icon="@Icons.Material.Filled.Tune" />
+        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="@(()=>_dialogOpen=true)" />
+    </MudStack>
+
+    <MudStack Row="true" Spacing="1" Class="mt-2">
+        <MudChip T="string" Color="@(_filtro == FiltroTodos ? Color.Primary : Color.Default)" OnClick="()=>SetFiltro(FiltroTodos)">Todos</MudChip>
+        <MudChip T="string" Color="@(_filtro == FiltroPendente ? Color.Primary : Color.Default)" OnClick="()=>SetFiltro(FiltroPendente)">Pendente</MudChip>
+        <MudChip T="string" Color="@(_filtro == FiltroAtrasado ? Color.Primary : Color.Default)" OnClick="()=>SetFiltro(FiltroAtrasado)">Atrasado</MudChip>
+        <MudChip T="string" Color="@(_filtro == FiltroRecebido ? Color.Primary : Color.Default)" OnClick="()=>SetFiltro(FiltroRecebido)">Recebido</MudChip>
+    </MudStack>
+</MudPaper>
+
+<MudGrid Class="mb-4">
+    <MudItem xs="12" md="4"><MudPaper Class="pa-3 stat-box" Elevation="0"><MudText Typo="Typo.subtitle2">Pendente</MudText><MudText Typo="Typo.h4">@FormatMoeda(_pendente)</MudText></MudPaper></MudItem>
+    <MudItem xs="12" md="4"><MudPaper Class="pa-3 stat-box" Elevation="0"><MudText Typo="Typo.subtitle2">Atrasado</MudText><MudText Typo="Typo.h4">@FormatMoeda(_atrasado)</MudText></MudPaper></MudItem>
+    <MudItem xs="12" md="4"><MudPaper Class="pa-3 stat-box" Elevation="0"><MudText Typo="Typo.subtitle2">Recebido</MudText><MudText Typo="Typo.h4">@FormatMoeda(_recebido)</MudText></MudPaper></MudItem>
+</MudGrid>
+
+<MudText Typo="Typo.h5" Class="mb-2">Atenção Necessária</MudText>
+<MudGrid>
+    @foreach (var contrato in FiltrarContratos().Take(8))
+    {
+        <MudItem xs="12" md="6">
+            <MudPaper Class="billing-card pa-3" Elevation="0">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <div>
+                        <MudText Typo="Typo.h6">@NomeCliente(contrato.IdCliente)</MudText>
+                        <MudText Typo="Typo.body2" Class="@(StatusClass(ClassificarStatusContrato(contrato)))">
+                            @StatusLabel(ClassificarStatusContrato(contrato))
+                        </MudText>
+                    </div>
+                    <MudText Typo="Typo.h5">@FormatMoeda(contrato.Valor)</MudText>
+                </MudStack>
+                <MudDivider Class="my-2" />
+                <MudStack Row="true" Spacing="1" Class="billing-actions">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Outlined.Receipt" Class="billing-action-btn">Cobrar</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Check" Class="billing-action-btn">Pago</MudButton>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    }
+</MudGrid>
+
+@if (_errors.Count > 0)
+{
+    <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">
+        @foreach (var error in _errors)
+        {
+            <div>@error</div>
+        }
+    </MudAlert>
+}
+
+<MudDialog @bind-Visible="_dialogOpen" Options="_dialogOptions">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-2">Novo contrato</MudText>
+        <MudStack Spacing="2">
+            <MudSelect T="Guid" Label="Cliente" @bind-Value="_novo.IdCliente" Variant="Variant.Outlined">
+                <MudSelectItem Value="@Guid.Empty">Selecione...</MudSelectItem>
+                @foreach (var cliente in _clientesTodos)
+                {
+                    <MudSelectItem Value="@cliente.Id">@cliente.Nome @cliente.Sobrenome</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="int" Label="Tipo" @bind-Value="_novo.Tipo" Variant="Variant.Outlined">
+                <MudSelectItem Value="1">Diário</MudSelectItem>
+                <MudSelectItem Value="2">Semanal</MudSelectItem>
+                <MudSelectItem Value="3">Mensal</MudSelectItem>
+                <MudSelectItem Value="4">Anual</MudSelectItem>
+            </MudSelect>
+            <MudNumericField T="decimal" Label="Valor" @bind-Value="_novo.Valor" Variant="Variant.Outlined" Min="0" />
+            <MudDatePicker Label="Data Início" @bind-Date="_novo.DataInicio" Variant="Variant.Outlined" />
+            <MudDatePicker Label="Data Fim (opcional)" @bind-Date="_novo.DataFim" Variant="Variant.Outlined" />
+            <MudTextField T="string" Label="Observações" @bind-Value="_novo.Observacoes" Variant="Variant.Outlined" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="(()=>_dialogOpen=false)">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CriarAsync">Salvar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private const string FiltroTodos = "todos";
+    private const string FiltroPendente = "pendente";
+    private const string FiltroAtrasado = "atrasado";
+    private const string FiltroRecebido = "recebido";
+
+    private readonly DialogOptions _dialogOptions = new() { CloseButton = true, FullWidth = true, MaxWidth = MaxWidth.Small };
+    private bool _dialogOpen;
+    private string _busca = string.Empty;
+    private string _filtro = FiltroTodos;
+    private decimal _pendente;
+    private decimal _atrasado;
+    private decimal _recebido;
+    private List<string> _errors = [];
+    private List<ContratoApp.Web.Models.ClienteResponse> _clientesTodos = [];
+    private List<ContratoApp.Web.Models.ContratoResponse> _contratos = [];
+    private NovoContratoModel _novo = new();
+
+    protected override Task OnInitializedAsync() => CarregarAsync();
+
+    private void SetFiltro(string filtro) => _filtro = filtro;
+
+    private async Task CarregarAsync()
+    {
+        _errors.Clear();
+        _clientesTodos = (await Api.ObterClientesAsync()).ToList();
+        _contratos = (await Api.ObterContratosAsync()).ToList();
+
+        _pendente = _contratos.Where(x =>
+        {
+            var status = ClassificarStatusContrato(x);
+            return status == 1 || status == 4;
+        }).Sum(x => x.Valor);
+
+        _atrasado = _contratos.Where(x => ClassificarStatusContrato(x) == 2).Sum(x => x.Valor);
+        _recebido = _contratos.Where(x => ClassificarStatusContrato(x) == 3).Sum(x => x.Valor);
+    }
+
+    private IEnumerable<ContratoApp.Web.Models.ContratoResponse> FiltrarContratos()
+    {
+        IEnumerable<ContratoApp.Web.Models.ContratoResponse> query = _contratos;
+
+        if (!string.IsNullOrWhiteSpace(_busca))
+            query = query.Where(c => NomeCliente(c.IdCliente).Contains(_busca, StringComparison.OrdinalIgnoreCase));
+
+        query = _filtro switch
+        {
+            FiltroPendente => query.Where(x =>
+            {
+                var status = ClassificarStatusContrato(x);
+                return status == 1 || status == 4;
+            }),
+            FiltroAtrasado => query.Where(x => ClassificarStatusContrato(x) == 2),
+            FiltroRecebido => query.Where(x => ClassificarStatusContrato(x) == 3),
+            _ => query
+        };
+
+        return query.OrderByDescending(x => x.AtualizadaEmUtc ?? x.CriadoEmUtc);
+    }
+
+    private async Task CriarAsync()
+    {
+        _errors.Clear();
+
+        if (_novo.IdCliente == Guid.Empty)
+        {
+            _errors.Add("Selecione um cliente.");
+            return;
+        }
+
+        var dataInicio = _novo.DataInicio ?? DateTime.Today;
+        var status = ClassificarStatusContrato(dataInicio, _novo.DataFim, 0);
+
+        var result = await Api.CriarContratoAsync(new ContratoApp.Web.Models.CriarContratoRequest(
+            _novo.IdCliente,
+            _novo.Tipo,
+            _novo.Valor,
+            dataInicio,
+            _novo.DataFim,
+            status,
+            _novo.Observacoes));
+
+        if (!result.Success)
+        {
+            _errors = result.Errors.ToList();
+            return;
+        }
+
+        _novo = new NovoContratoModel();
+        _dialogOpen = false;
+        await CarregarAsync();
+    }
+
+    private string NomeCliente(Guid idCliente)
+        => _clientesTodos.FirstOrDefault(c => c.Id == idCliente) is { } c ? $"{c.Nome} {c.Sobrenome}" : idCliente.ToString()[..8];
+
+    private static int ClassificarStatusContrato(ContratoApp.Web.Models.ContratoResponse contrato)
+        => ClassificarStatusContrato(contrato.DataInicio, contrato.DataFim, contrato.Status);
+
+    private static int ClassificarStatusContrato(DateTime dataInicio, DateTime? dataFim, int statusAtual)
+    {
+        if (statusAtual == 3)
+            return 3;
+
+        if (dataFim.HasValue && dataFim.Value.Date < DateTime.Today)
+            return 2;
+
+        if (dataInicio.Date > DateTime.Today)
+            return 4;
+
+        return 1;
+    }
+
+    private static string StatusLabel(int status) => status switch
+    {
+        1 => "Pendente",
+        2 => "Atrasado",
+        3 => "Recebido",
+        4 => "Agendado",
+        _ => "Outro"
+    };
+
+    private static string StatusClass(int status)
+        => status == 2 ? "text-danger" : "mud-text-secondary";
+
+    private static string FormatMoeda(decimal valor)
+        => string.Format(new System.Globalization.CultureInfo("pt-BR"), "{0:C}", valor);
+
+    private sealed class NovoContratoModel
+    {
+        public Guid IdCliente { get; set; } = Guid.Empty;
+        public int Tipo { get; set; } = 1;
+        public decimal Valor { get; set; }
+        public DateTime? DataInicio { get; set; } = DateTime.Today;
+        public DateTime? DataFim { get; set; }
+        public string Observacoes { get; set; } = string.Empty;
+    }
+}
+
+
+

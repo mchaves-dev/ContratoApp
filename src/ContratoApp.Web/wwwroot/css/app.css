@@ -1,0 +1,140 @@
+﻿html, body {
+    margin: 0;
+    min-height: 100%;
+    font-family: 'Montserrat', sans-serif;
+    color: #f1f7ff;
+    background: radial-gradient(circle at 10% 10%, #0d223b 0%, #07172a 38%, #051322 100%);
+}
+
+#app {
+    min-height: 100vh;
+}
+
+.app-shell {
+    min-height: 100vh;
+}
+
+.topbar {
+    border-bottom: 1px solid rgba(105, 132, 168, 0.2);
+    backdrop-filter: blur(4px);
+}
+
+.side-drawer {
+    border-right: 1px solid rgba(105, 132, 168, 0.15);
+}
+
+.main-content {
+    max-width: 1280px;
+}
+
+.welcome-banner {
+    background: linear-gradient(90deg, rgba(29, 51, 83, 0.9) 0%, rgba(17, 33, 57, 0.82) 100%);
+    border: 1px solid rgba(115, 147, 192, 0.15);
+    border-radius: 12px;
+    padding: 16px 20px;
+}
+
+.status-card {
+    border-radius: 16px;
+    border: 1px solid rgba(118, 150, 194, 0.2);
+    background: linear-gradient(135deg, rgba(24, 37, 60, 0.98) 0%, rgba(21, 35, 56, 0.98) 100%);
+}
+
+.status-card.danger {
+    border-color: rgba(255, 86, 86, 0.35);
+}
+
+.status-card.info {
+    background: linear-gradient(135deg, rgba(66, 148, 230, 0.97) 0%, rgba(62, 160, 255, 0.95) 100%);
+}
+
+.status-card.success {
+    border-color: rgba(0, 198, 122, 0.3);
+}
+
+.update-row {
+    border-radius: 14px;
+    background: linear-gradient(90deg, rgba(30, 44, 68, 0.98) 0%, rgba(26, 39, 60, 0.98) 100%);
+    border: 1px solid rgba(105, 132, 168, 0.12);
+}
+
+.search-panel,
+.form-panel,
+.data-panel,
+.client-card,
+.billing-card,
+.stat-box {
+    border-radius: 14px;
+    border: 1px solid rgba(105, 132, 168, 0.18);
+    background: linear-gradient(90deg, rgba(27, 40, 64, 0.98) 0%, rgba(24, 37, 60, 0.98) 100%);
+}
+
+.text-danger {
+    color: #ff6565;
+}
+
+.fab-new {
+    position: fixed;
+    right: 28px;
+    bottom: 24px;
+    z-index: 100;
+    box-shadow: 0 0 26px rgba(62, 160, 255, 0.35);
+}
+
+#blazor-error-ui {
+    background: #352327;
+    color: #ffd9de;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 2000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+.client-card {
+    min-height: 92px;
+}
+
+.client-edit-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(53, 75, 106, 0.42);
+}
+
+.billing-actions {
+    flex-wrap: nowrap;
+}
+
+.billing-action-btn {
+    min-width: 132px;
+    border-radius: 16px;
+}
+
+@media (max-width: 900px) {
+    .billing-actions {
+        flex-wrap: wrap;
+    }
+
+    .billing-action-btn {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+
+.os-center {
+    max-width: 1440px;
+    margin: 0 auto;
+}
+

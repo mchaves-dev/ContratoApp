@@ -1,0 +1,168 @@
+﻿@page "/clientes"
+@inject ContratoApp.Web.Services.ContratoApiClient Api
+
+<PageTitle>Clientes</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-3">Clientes</MudText>
+
+<MudPaper Class="search-panel pa-3 mb-3" Elevation="0">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
+        <MudButton Variant="Variant.Text" Color="Color.Info">Selecionar</MudButton>
+        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="@(()=>_dialogOpen = !_dialogOpen)" />
+    </MudStack>
+
+    <MudTextField T="string" @bind-Value="_busca" Placeholder="Buscar cliente..." Variant="Variant.Outlined" Immediate="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+
+    <MudStack Row="true" Spacing="1" Class="mt-2">
+        <MudChip T="string" Color="@(_filtro == FiltroTodos ? Color.Primary : Color.Default)" OnClick="()=>SetFiltro(FiltroTodos)">Todos</MudChip>
+        <MudChip T="string" Color="@(_filtro == FiltroAtivos ? Color.Primary : Color.Default)" OnClick="()=>SetFiltro(FiltroAtivos)">Ativos</MudChip>
+        <MudChip T="string" Color="@(_filtro == FiltroInativos ? Color.Primary : Color.Default)" OnClick="()=>SetFiltro(FiltroInativos)">Inativos</MudChip>
+    </MudStack>
+</MudPaper>
+
+@if (_errors.Count > 0)
+{
+    <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">
+        @foreach (var error in _errors)
+        {
+            <div>@error</div>
+        }
+    </MudAlert>
+}
+
+<MudGrid>
+    @foreach (var cliente in FiltrarClientes())
+    {
+        <MudItem xs="12" md="6" lg="4">
+            <MudPaper Class="client-card pa-3" Elevation="0">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Justify="Justify.SpaceBetween">
+                    <MudAvatar Color="Color.Primary" Size="Size.Large">@Inicial(cliente.Nome, cliente.Sobrenome)</MudAvatar>
+                    <div class="flex-grow-1">
+                        <MudText Typo="Typo.h6">@cliente.Nome @cliente.Sobrenome</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">@cliente.Email</MudText>
+                    </div>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudChip T="string" Size="Size.Small" Color="@(cliente.Ativo ? Color.Primary : Color.Default)">
+                            @(cliente.Ativo ? "CONTRATO ATIVO" : "SEM CONTRATO")
+                        </MudChip>
+                        <MudIconButton Icon="@Icons.Material.Outlined.Edit" Color="Color.Default" Class="client-edit-btn" />
+                    </MudStack>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    }
+</MudGrid>
+
+<MudDialog @bind-Visible="_dialogOpen" Options="_dialogOptions">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-2">Novo cliente</MudText>
+        <MudStack Spacing="2">
+            <MudTextField T="string" Label="Nome" @bind-Value="_novo.Nome" Variant="Variant.Outlined" />
+            <MudTextField T="string" Label="Sobrenome" @bind-Value="_novo.Sobrenome" Variant="Variant.Outlined" />
+            <MudTextField T="string" Label="Email" @bind-Value="_novo.Email" Variant="Variant.Outlined" />
+            <MudTextField T="string" Label="Cidade" @bind-Value="_novo.Cidade" Variant="Variant.Outlined" />
+            <MudTextField T="string" Label="Logradouro" @bind-Value="_novo.Logradouro" Variant="Variant.Outlined" />
+            <MudTextField T="string" Label="Bairro" @bind-Value="_novo.Bairro" Variant="Variant.Outlined" />
+            <MudTextField T="string" Label="Número" @bind-Value="_novo.Numero" Variant="Variant.Outlined" />
+            <MudTextField T="string" Label="CEP" @bind-Value="_novo.Cep" Variant="Variant.Outlined" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="(()=>_dialogOpen=false)">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CriarAsync">Salvar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private const string FiltroTodos = "todos";
+    private const string FiltroAtivos = "ativos";
+    private const string FiltroInativos = "inativos";
+
+    private readonly DialogOptions _dialogOptions = new() { CloseButton = true, FullWidth = true, MaxWidth = MaxWidth.Small };
+    private bool _dialogOpen;
+    private string _busca = string.Empty;
+    private string _filtro = FiltroTodos;
+    private List<string> _errors = [];
+    private List<ContratoApp.Web.Models.ClienteResponse> _clientes = [];
+    private NovoClienteModel _novo = new();
+
+    protected override Task OnInitializedAsync() => CarregarAsync();
+
+    private void SetFiltro(string filtro) => _filtro = filtro;
+
+    private async Task CarregarAsync()
+    {
+        _errors.Clear();
+        _clientes = (await Api.ObterClientesAsync()).ToList();
+    }
+
+    private IEnumerable<ContratoApp.Web.Models.ClienteResponse> FiltrarClientes()
+    {
+        IEnumerable<ContratoApp.Web.Models.ClienteResponse> query = _clientes;
+
+        if (!string.IsNullOrWhiteSpace(_busca))
+            query = query.Where(x => ($"{x.Nome} {x.Sobrenome} {x.Email}").Contains(_busca, StringComparison.OrdinalIgnoreCase));
+
+        query = _filtro switch
+        {
+            FiltroAtivos => query.Where(x => x.Ativo),
+            FiltroInativos => query.Where(x => !x.Ativo),
+            _ => query
+        };
+
+        return query.OrderBy(x => x.Nome).ThenBy(x => x.Sobrenome);
+    }
+
+    private async Task CriarAsync()
+    {
+        _errors.Clear();
+
+        if (string.IsNullOrWhiteSpace(_novo.Nome) || string.IsNullOrWhiteSpace(_novo.Email))
+        {
+            _errors.Add("Nome e Email são obrigatórios.");
+            return;
+        }
+
+        var result = await Api.CriarClienteAsync(new ContratoApp.Web.Models.CriarClienteRequest(
+            _novo.Nome,
+            _novo.Sobrenome,
+            _novo.Email,
+            _novo.Cidade,
+            _novo.Logradouro,
+            _novo.Bairro,
+            _novo.Numero,
+            _novo.Cep));
+
+        if (!result.Success)
+        {
+            _errors = result.Errors.ToList();
+            return;
+        }
+
+        _novo = new NovoClienteModel();
+        _dialogOpen = false;
+        await CarregarAsync();
+    }
+
+    private static string Inicial(string nome, string sobrenome)
+    {
+        var n = string.IsNullOrWhiteSpace(nome) ? '?' : char.ToUpperInvariant(nome[0]);
+        var s = string.IsNullOrWhiteSpace(sobrenome) ? '?' : char.ToUpperInvariant(sobrenome[0]);
+        return string.Concat(n, s);
+    }
+
+    private sealed class NovoClienteModel
+    {
+        public string Nome { get; set; } = string.Empty;
+        public string Sobrenome { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Cidade { get; set; } = string.Empty;
+        public string Logradouro { get; set; } = string.Empty;
+        public string Bairro { get; set; } = string.Empty;
+        public string Numero { get; set; } = string.Empty;
+        public string Cep { get; set; } = string.Empty;
+    }
+}
+
+
+

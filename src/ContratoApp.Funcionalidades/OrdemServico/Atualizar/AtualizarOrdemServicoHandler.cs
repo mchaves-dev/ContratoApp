@@ -1,8 +1,9 @@
-using ContratoApp.Dominio.Enums;
+Ôªøusing ContratoApp.Dominio.Enums;
 using ContratoApp.Dominio.Events;
 using ContratoApp.Dominio.Handlers;
 using ContratoApp.Dominio.ValueObjects;
 using ContratoApp.Funcionalidades.Clientes;
+using ContratoApp.Funcionalidades.Compartilhado.Status;
 using ContratoApp.Funcionalidades.Compartilhado.Validacoes;
 using ContratoApp.Funcionalidades.OrdemServico.Compartilhado.Response;
 using ContratoApp.Infra.Database;
@@ -33,7 +34,7 @@ public sealed class AtualizarOrdemServicoHandler(AppDbContext dbContext, IEventP
 
         var ordemServico = await dbContext.OrdemServicos.FirstOrDefaultAsync(x => x.Id == id, cancellationToken).ConfigureAwait(false);
         if (ordemServico is null)
-            return Result.Fail("Ordem de serviÁo n„o encontrada.");
+            return Result.Fail("Ordem de servi√ßo n√£o encontrada.");
 
         var clienteExiste = await dbContext.Clientes
             .AsNoTracking()
@@ -41,12 +42,12 @@ public sealed class AtualizarOrdemServicoHandler(AppDbContext dbContext, IEventP
             .ConfigureAwait(false);
 
         if (!clienteExiste)
-            return Result.Fail("Cliente n„o encontrado.");
+            return Result.Fail("Cliente n√£o encontrado.");
 
         ordemServico.IdCliente = request.IdCliente;
         ordemServico.DataAbertura = request.DataAbertura;
         ordemServico.DataFechamento = request.DataFechamento;
-        ordemServico.Status = request.Status;
+        ordemServico.Status = StatusClassifier.ClassificarOrdemServico(request.DataAbertura, request.DataFechamento, request.Status);
         ordemServico.Observacoes = Observacao.Criar(request.Observacoes ?? string.Empty);
 
         await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -64,3 +65,5 @@ public sealed class AtualizarOrdemServicoHandler(AppDbContext dbContext, IEventP
             ordemServico.AtualizadaEmUtc));
     }
 }
+
+

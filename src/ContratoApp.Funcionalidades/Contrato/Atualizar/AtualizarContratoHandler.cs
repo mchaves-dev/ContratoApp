@@ -1,8 +1,9 @@
-using ContratoApp.Dominio.Events;
+Ôªøusing ContratoApp.Dominio.Events;
 using ContratoApp.Dominio.Enums;
 using ContratoApp.Dominio.Handlers;
 using ContratoApp.Dominio.ValueObjects;
 using ContratoApp.Funcionalidades.Clientes;
+using ContratoApp.Funcionalidades.Compartilhado.Status;
 using ContratoApp.Funcionalidades.Compartilhado.Validacoes;
 using ContratoApp.Funcionalidades.Contrato.Compartilhado.Response;
 using ContratoApp.Infra.Database;
@@ -35,7 +36,7 @@ public sealed class AtualizarContratoHandler(AppDbContext dbContext, IEventPubli
 
         var contrato = await dbContext.Contratos.FirstOrDefaultAsync(x => x.Id == id, cancellationToken).ConfigureAwait(false);
         if (contrato is null)
-            return Result.Fail("Contrato n„o encontrado.");
+            return Result.Fail("Contrato n√£o encontrado.");
 
         var clienteExiste = await dbContext.Clientes
             .AsNoTracking()
@@ -43,14 +44,14 @@ public sealed class AtualizarContratoHandler(AppDbContext dbContext, IEventPubli
             .ConfigureAwait(false);
 
         if (!clienteExiste)
-            return Result.Fail("Cliente n„o encontrado.");
+            return Result.Fail("Cliente n√£o encontrado.");
 
         contrato.IdCliente = request.IdCliente;
         contrato.Tipo = request.Tipo;
         contrato.Valor = Dinheiro.Criar(request.Valor);
         contrato.DataInicio = request.DataInicio;
         contrato.DataFim = request.DataFim;
-        contrato.Status = request.Status;
+        contrato.Status = StatusClassifier.ClassificarContrato(request.DataInicio, request.DataFim, request.Status);
         contrato.Observacoes = Observacao.Criar(request.Observacoes ?? string.Empty);
 
         await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -70,3 +71,5 @@ public sealed class AtualizarContratoHandler(AppDbContext dbContext, IEventPubli
             contrato.AtualizadaEmUtc));
     }
 }
+
+

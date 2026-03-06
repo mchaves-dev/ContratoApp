@@ -1,0 +1,172 @@
+﻿@page "/ordens-servico"
+@inject ContratoApp.Web.Services.ContratoApiClient Api
+
+<PageTitle>Ordens</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-3">Ordens de Serviço</MudText>
+
+<MudPaper Class="search-panel pa-3 mb-3" Elevation="0">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudTextField T="string" @bind-Value="_busca" Placeholder="Buscar por cliente..." Variant="Variant.Outlined" Immediate="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="flex-grow-1" />
+        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="@(()=>_dialogOpen=true)" />
+    </MudStack>
+</MudPaper>
+
+<MudGrid>
+    @foreach (var ordem in FiltrarOrdens())
+    {
+        <MudItem xs="12" md="6" lg="6">
+            <MudPaper Class="client-card pa-3" Elevation="0">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <div>
+                        <MudText Typo="Typo.h6">@NomeCliente(ordem.IdCliente)</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">Abertura: @ordem.DataAbertura.ToShortDateString()</MudText>
+                    </div>
+                    <MudChip T="string" Size="Size.Small" Color="@StatusColor(ClassificarStatusOrdem(ordem))">@StatusLabel(ClassificarStatusOrdem(ordem))</MudChip>
+                </MudStack>
+                <MudDivider Class="my-2" />
+                <MudText Typo="Typo.body2">@ordem.Observacoes</MudText>
+            </MudPaper>
+        </MudItem>
+    }
+</MudGrid>
+
+@if (_errors.Count > 0)
+{
+    <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">
+        @foreach (var error in _errors)
+        {
+            <div>@error</div>
+        }
+    </MudAlert>
+}
+
+<MudDialog @bind-Visible="_dialogOpen" Options="_dialogOptions">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-2">Nova ordem</MudText>
+        <MudStack Spacing="2">
+            <MudSelect T="Guid" Label="Cliente" @bind-Value="_novo.IdCliente" Variant="Variant.Outlined">
+                <MudSelectItem Value="@Guid.Empty">Selecione...</MudSelectItem>
+                @foreach (var cliente in _clientesTodos)
+                {
+                    <MudSelectItem Value="@cliente.Id">@cliente.Nome @cliente.Sobrenome</MudSelectItem>
+                }
+            </MudSelect>
+            <MudDatePicker Label="Data Abertura" @bind-Date="_novo.DataAbertura" Variant="Variant.Outlined" />
+            <MudDatePicker Label="Data Fechamento (opcional)" @bind-Date="_novo.DataFechamento" Variant="Variant.Outlined" />
+            <MudTextField T="string" Label="Observações" @bind-Value="_novo.Observacoes" Variant="Variant.Outlined" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="(()=>_dialogOpen=false)">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CriarAsync">Salvar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private readonly DialogOptions _dialogOptions = new() { CloseButton = true, FullWidth = true, MaxWidth = MaxWidth.Small };
+    private bool _dialogOpen;
+    private string _busca = string.Empty;
+    private List<string> _errors = [];
+    private List<ContratoApp.Web.Models.ClienteResponse> _clientesTodos = [];
+    private List<ContratoApp.Web.Models.OrdemServicoResponse> _ordens = [];
+    private NovaOrdemModel _novo = new();
+
+    protected override Task OnInitializedAsync() => CarregarAsync();
+
+    private async Task CarregarAsync()
+    {
+        _errors.Clear();
+        _clientesTodos = (await Api.ObterClientesAsync()).ToList();
+        _ordens = (await Api.ObterOrdensAsync()).ToList();
+    }
+
+    private IEnumerable<ContratoApp.Web.Models.OrdemServicoResponse> FiltrarOrdens()
+    {
+        var query = _ordens.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(_busca))
+            query = query.Where(x => NomeCliente(x.IdCliente).Contains(_busca, StringComparison.OrdinalIgnoreCase));
+
+        return query.OrderByDescending(x => x.DataAbertura);
+    }
+
+    private async Task CriarAsync()
+    {
+        _errors.Clear();
+
+        if (_novo.IdCliente == Guid.Empty)
+        {
+            _errors.Add("Selecione um cliente.");
+            return;
+        }
+
+        var dataAbertura = _novo.DataAbertura ?? DateTime.Today;
+        var status = ClassificarStatusOrdem(dataAbertura, _novo.DataFechamento, 0);
+
+        var result = await Api.CriarOrdemServicoAsync(new ContratoApp.Web.Models.CriarOrdemServicoRequest(
+            _novo.IdCliente,
+            dataAbertura,
+            _novo.DataFechamento,
+            status,
+            _novo.Observacoes));
+
+        if (!result.Success)
+        {
+            _errors = result.Errors.ToList();
+            return;
+        }
+
+        _novo = new NovaOrdemModel();
+        _dialogOpen = false;
+        await CarregarAsync();
+    }
+
+    private string NomeCliente(Guid idCliente)
+        => _clientesTodos.FirstOrDefault(c => c.Id == idCliente) is { } c ? $"{c.Nome} {c.Sobrenome}" : idCliente.ToString()[..8];
+
+    private static int ClassificarStatusOrdem(ContratoApp.Web.Models.OrdemServicoResponse ordem)
+        => ClassificarStatusOrdem(ordem.DataAbertura, ordem.DataFechamento, ordem.Status);
+
+    private static int ClassificarStatusOrdem(DateTime dataAbertura, DateTime? dataFechamento, int statusAtual)
+    {
+        if (statusAtual == 4)
+            return 4;
+
+        if (dataFechamento.HasValue)
+            return 3;
+
+        if (dataAbertura.Date < DateTime.Today)
+            return 2;
+
+        return 1;
+    }
+
+    private static string StatusLabel(int status) => status switch
+    {
+        1 => "Aberta",
+        2 => "Em andamento",
+        3 => "Concluída",
+        4 => "Faturada",
+        _ => "Outro"
+    };
+
+    private static Color StatusColor(int status) => status switch
+    {
+        1 => Color.Info,
+        2 => Color.Warning,
+        3 => Color.Success,
+        4 => Color.Secondary,
+        _ => Color.Default
+    };
+
+    private sealed class NovaOrdemModel
+    {
+        public Guid IdCliente { get; set; } = Guid.Empty;
+        public DateTime? DataAbertura { get; set; } = DateTime.Today;
+        public DateTime? DataFechamento { get; set; }
+        public string Observacoes { get; set; } = string.Empty;
+    }
+}
+
+
+

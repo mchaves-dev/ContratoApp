@@ -1,8 +1,9 @@
-using ContratoApp.Dominio.Events;
+﻿using ContratoApp.Dominio.Events;
 using ContratoApp.Dominio.Enums;
 using ContratoApp.Dominio.Handlers;
 using ContratoApp.Dominio.ValueObjects;
 using ContratoApp.Funcionalidades.Clientes;
+using ContratoApp.Funcionalidades.Compartilhado.Status;
 using ContratoApp.Funcionalidades.Compartilhado.Validacoes;
 using ContratoApp.Funcionalidades.Contrato.Compartilhado.Response;
 using ContratoApp.Infra.Database;
@@ -39,7 +40,7 @@ public sealed class CriarContratoHandler(AppDbContext dbContext, IEventPublisher
             .ConfigureAwait(false);
 
         if (!clienteExiste)
-            return Result.Fail("Cliente n�o encontrado.");
+            return Result.Fail("Cliente não encontrado.");
 
         var contrato = new Dominio.Entities.Contrato
         {
@@ -48,7 +49,7 @@ public sealed class CriarContratoHandler(AppDbContext dbContext, IEventPublisher
             Valor = Dinheiro.Criar(request.Valor),
             DataInicio = request.DataInicio,
             DataFim = request.DataFim,
-            Status = request.Status,
+            Status = StatusClassifier.ClassificarContrato(request.DataInicio, request.DataFim, request.Status),
             Observacoes = Observacao.Criar(request.Observacoes ?? string.Empty)
         };
 
@@ -75,3 +76,5 @@ public sealed class CriarContratoHandler(AppDbContext dbContext, IEventPublisher
             contrato.AtualizadaEmUtc);
     }
 }
+
+
