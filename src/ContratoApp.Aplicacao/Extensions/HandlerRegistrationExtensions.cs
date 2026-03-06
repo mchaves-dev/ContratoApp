@@ -1,4 +1,5 @@
-﻿using ContratoApp.Dominio.Handlers;
+﻿using ContratoApp.Dominio.Events;
+using ContratoApp.Dominio.Handlers;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
@@ -6,38 +7,64 @@ namespace ContratoApp.Aplicacao.Extensions;
 
 public static class HandlerRegistrationExtensions
 {
-	/// <summary>
-	/// Registers all handlers from the assembly containing the specified type
-	/// </summary>
-	/// <param name="services">The service collection</param>
-	/// <param name="marker">A type from the assembly where handlers are located</param>
-	/// <returns>The service collection for chaining</returns>
-	public static IServiceCollection RegisterHandlersFromAssemblyContaining(this IServiceCollection services, Type marker)
-	{
-		var assembly = marker.Assembly;
+    /// <summary>
+    /// Registers all handlers from the assembly containing the specified type
+    /// </summary>
+    /// <param name="services">The service collection</param>
+    /// <param name="marker">A type from the assembly where handlers are located</param>
+    /// <returns>The service collection for chaining</returns>
+    public static IServiceCollection RegisterHandlersFromAssemblyContaining(this IServiceCollection services, Type marker)
+    {
+        var assembly = marker.Assembly;
 
-		// Register command handlers (IHandler implementations)
-		RegisterCommandHandlers(services, assembly);
+        // Register command handlers (IHandler implementations)
+        RegisterCommandHandlers(services, assembly);
 
-		return services;
-	}
+        // Register event handlers (IEventHandler implementations)
+        RegisterEventHandlers(services, assembly);
 
-	private static void RegisterCommandHandlers(IServiceCollection services, Assembly assembly)
-	{
-		var handlerTypes = assembly.GetTypes()
-			.Where(t => t is { IsClass: true, IsAbstract: false }
-				&& t.IsAssignableTo(typeof(IHandler)))
-			.ToList();
+        return services;
+    }
 
-		foreach (var implementationType in handlerTypes)
-		{
-			var interfaceType = implementationType.GetInterfaces()
-				.FirstOrDefault(i => i != typeof(IHandler) && i.IsAssignableTo(typeof(IHandler)));
+    private static void RegisterCommandHandlers(IServiceCollection services, Assembly assembly)
+    {
+        var handlerTypes = assembly.GetTypes()
+            .Where(t => t is { IsClass: true, IsAbstract: false }
+                && t.IsAssignableTo(typeof(IHandler))
+                && !t.IsAssignableTo(typeof(IEventHandler)))
+            .ToList();
 
-			if (interfaceType is not null)
-			{
-				services.AddScoped(interfaceType, implementationType);
-			}
-		}
-	}
+        foreach (var implementationType in handlerTypes)
+        {
+            var interfaceType = implementationType.GetInterfaces()
+                .FirstOrDefault(i => i != typeof(IHandler) && i.IsAssignableTo(typeof(IHandler)));
+
+            if (interfaceType is not null)
+            {
+                services.AddScoped(interfaceType, implementationType);
+            }
+        }
+    }
+
+    private static void RegisterEventHandlers(IServiceCollection services, Assembly assembly)
+    {
+        var eventHandlerTypes = assembly.GetTypes()
+            .Where(t => t is { IsClass: true, IsAbstract: false }
+                && t.IsAssignableTo(typeof(IEventHandler))
+                && !t.IsAssignableTo(typeof(IHandler)))
+            .ToList();
+
+        foreach (var implementationType in eventHandlerTypes)
+        {
+            // Find all IEventHandler<T> interfaces implemented by this type
+            var handlerInterfaces = implementationType.GetInterfaces()
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEventHandler<>));
+
+            foreach (var interfaceType in handlerInterfaces)
+            {
+                // Register as both the specific IEventHandler<T> and the non-generic IEventHandler
+                services.AddScoped(interfaceType, implementationType);
+            }
+        }
+    }
 }

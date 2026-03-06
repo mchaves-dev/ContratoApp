@@ -1,10 +1,16 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="OrdemServico\Item\**" />
+    <EmbeddedResource Remove="OrdemServico\Item\**" />
+    <None Remove="OrdemServico\Item\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Clientes\AtualizarCliente\" />
@@ -23,9 +29,6 @@
     <Folder Include="OrdemServicoItem\RemoverItem\" />
     <Folder Include="OrdemServico\Atualizar\" />
     <Folder Include="OrdemServico\Criar\" />
-    <Folder Include="OrdemServico\Item\AdicionarItem\" />
-    <Folder Include="OrdemServico\Item\ObterPorId\" />
-    <Folder Include="OrdemServico\Item\RemoverItem\" />
     <Folder Include="OrdemServico\ObterAtivos\" />
     <Folder Include="OrdemServico\ObterPorId\" />
     <Folder Include="OrdemServico\ObterPorPeriodo\" />
@@ -33,6 +36,7 @@
 
   <ItemGroup>
     <PackageReference Include="FluentResults" />
+    <PackageReference Include="Flunt" />
   </ItemGroup>
 
   <ItemGroup>
