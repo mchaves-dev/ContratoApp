@@ -13,10 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Clientes\AtualizarCliente\" />
-    <Folder Include="Clientes\ObterAtivos\" />
-    <Folder Include="Clientes\ObterPorPeriodo\" />
-    <Folder Include="Clientes\ObterPorId\" />
     <Folder Include="Contrato\Atualizar\" />
     <Folder Include="Contrato\Criar\" />
     <Folder Include="Contrato\ObterAtivos\" />

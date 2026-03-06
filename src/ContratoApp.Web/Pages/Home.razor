@@ -2,123 +2,161 @@
 @inject ContratoApp.Web.Services.ContratoApiClient Api
 @inject NavigationManager Navigation
 
-<PageTitle>Resumo</PageTitle>
-
-<div class="welcome-banner mb-6">
-    <div>
-        <MudText Typo="Typo.body2" Class="mud-text-secondary">Bem-vinda de volta,</MudText>
-        <MudText Typo="Typo.h5">Ana Silva</MudText>
-    </div>
-</div>
+<PageTitle>Dashboards</PageTitle>
 
 <MudText Typo="Typo.h4">Resumo de @DateTime.Now.ToString("MMMM", new System.Globalization.CultureInfo("pt-BR"))</MudText>
 <MudText Typo="Typo.body1" Class="mud-text-secondary mb-4">Acompanhe o desempenho dos seus contratos.</MudText>
 
 <MudGrid Class="mb-6">
-    <MudItem xs="12" md="4">
-        <MudPaper Class="status-card danger pa-4" Elevation="0">
-            <MudText Typo="Typo.subtitle2" Color="Color.Error">Em atraso</MudText>
-            <MudText Typo="Typo.h3">@FormatMoeda(_valorAtrasado)</MudText>
-            <MudText Typo="Typo.body2">@_qtdAtrasados contratos pendentes</MudText>
-        </MudPaper>
-    </MudItem>
-    <MudItem xs="12" md="4">
-        <MudPaper Class="status-card info pa-4" Elevation="0">
-            <MudText Typo="Typo.subtitle2" Color="Color.Info">Vencem hoje</MudText>
-            <MudText Typo="Typo.h3">@FormatMoeda(_valorHoje)</MudText>
-            <MudText Typo="Typo.body2">@_qtdHoje contrato(s) vencendo</MudText>
-        </MudPaper>
-    </MudItem>
-    <MudItem xs="12" md="4">
-        <MudPaper Class="status-card success pa-4" Elevation="0">
-            <MudText Typo="Typo.subtitle2" Color="Color.Success">Pagos no mês</MudText>
-            <MudText Typo="Typo.h3">@FormatMoeda(_valorPagoMes)</MudText>
-            <MudText Typo="Typo.body2">@_qtdPagos contratos finalizados</MudText>
-        </MudPaper>
-    </MudItem>
+	<MudItem xs="12" md="4">
+		<MudPaper Class="status-card status-card-danger pa-6" Elevation="0">
+			<div class="status-card-decoration"></div>
+
+			<div class="d-flex align-center mb-4" style="gap:10px;">
+				<MudIcon Icon="@Icons.Material.Outlined.WarningAmber"
+						 Size="Size.Medium"
+						 Class="status-icon danger-icon" 
+						 Color="Color.Error" />
+				<MudText Typo="Typo.subtitle2" Class="status-title danger-text" Color="Color.Error">
+					Em atraso
+				</MudText>
+			</div>
+
+			<MudText Typo="Typo.h5" Class="status-value font-weight-bold">
+				@FormatMoeda(_valorAtrasado)
+			</MudText>
+
+			<MudText Typo="Typo.body2" Class="status-subtitle">
+				@_qtdAtrasados contratos pendentes
+			</MudText>
+		</MudPaper>
+	</MudItem>
+
+	<MudItem xs="12" md="4">
+		<MudPaper Class="status-card status-card-info pa-6" Elevation="0">
+			<div class="status-card-decoration"></div>
+
+			<div class="d-flex align-center mb-4" style="gap:10px;">
+				<MudIcon Icon="@Icons.Material.Outlined.CalendarMonth"
+						 Size="Size.Medium"
+						 Class="status-icon info-icon" />
+				<MudText Typo="Typo.subtitle2" Class="status-title info-text">
+					Vencem hoje
+				</MudText>
+			</div>
+
+			<MudText Typo="Typo.h5" Class="status-value font-weight-bold">
+				@FormatMoeda(_valorHoje)
+			</MudText>
+
+			<MudText Typo="Typo.body2" Class="status-subtitle">
+				@_qtdHoje contrato vencendo
+			</MudText>
+		</MudPaper>
+	</MudItem>
+
+	<MudItem xs="12" md="4">
+		<MudPaper Class="status-card status-card-success pa-6" Elevation="0">
+			<div class="status-card-decoration"></div>
+
+			<div class="d-flex align-center mb-4" style="gap:10px;">
+				<MudIcon Icon="@Icons.Material.Outlined.CheckCircle"
+						 Size="Size.Medium"
+						 Class="status-icon success-icon"
+						 Color="Color.Success" />
+				<MudText Typo="Typo.subtitle2" Class="status-title success-text" Color="Color.Success">
+					Pagos no mês
+				</MudText>
+			</div>
+
+			<MudText Typo="Typo.h5" Class="status-value font-weight-bold">
+				@FormatMoeda(_valorPagoMes)
+			</MudText>
+
+			<MudText Typo="Typo.body2" Class="status-subtitle">
+				@_qtdPagos contratos finalizados
+			</MudText>
+		</MudPaper>
+	</MudItem>
 </MudGrid>
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
-    <MudText Typo="Typo.h5">Últimas atualizações</MudText>
-    <MudButton Variant="Variant.Text" Color="Color.Info" Size="Size.Small" OnClick="IrParaCobrancas">Ver tudo</MudButton>
+	<MudText Typo="Typo.h6">Últimas atualizações</MudText>
+	<MudButton Variant="Variant.Text" Color="Color.Info" Size="Size.Small" OnClick="IrParaCobrancas">Ver tudo</MudButton>
 </MudStack>
 
 <MudStack Spacing="2" Class="mb-8">
-    @foreach (var item in _ultimasAtualizacoes)
-    {
-        <MudPaper Class="update-row pa-3" Elevation="0">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                <div>
-                    <MudText Typo="Typo.subtitle1">@item.Titulo</MudText>
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@item.Subtitulo</MudText>
-                </div>
-                <MudText Typo="Typo.h6">@FormatMoeda(item.Valor)</MudText>
-            </MudStack>
-        </MudPaper>
-    }
+	@foreach (var item in _ultimasAtualizacoes)
+	{
+		<MudPaper Class="update-row pa-3" Elevation="0">
+			<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+				<div>
+					<MudText Typo="Typo.subtitle1">@item.Titulo</MudText>
+					<MudText Typo="Typo.body2" Class="mud-text-secondary">@item.Subtitulo</MudText>
+				</div>
+				<MudText Typo="Typo.h6">@FormatMoeda(item.Valor)</MudText>
+			</MudStack>
+		</MudPaper>
+	}
 </MudStack>
 
-<MudButton Class="fab-new" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="IrParaCobrancas">
-    Novo Contrato
-</MudButton>
-
 @code {
-    private decimal _valorAtrasado;
-    private decimal _valorHoje;
-    private decimal _valorPagoMes;
-    private int _qtdAtrasados;
-    private int _qtdHoje;
-    private int _qtdPagos;
-    private List<AtualizacaoItem> _ultimasAtualizacoes = [];
+	private decimal _valorAtrasado;
+	private decimal _valorHoje;
+	private decimal _valorPagoMes;
+	private int _qtdAtrasados;
+	private int _qtdHoje;
+	private int _qtdPagos;
+	private List<AtualizacaoItem> _ultimasAtualizacoes = [];
 
-    protected override async Task OnInitializedAsync()
-    {
-        List<ContratoApp.Web.Models.ContratoResponse> contratos;
+	protected override async Task OnInitializedAsync()
+	{
+		List<ContratoApp.Web.Models.ContratoResponse> contratos;
 
-        try
-        {
-            contratos = (await Api.ObterContratosAsync()).ToList();
-        }
-        catch
-        {
-            _ultimasAtualizacoes = [];
-            return;
-        }
+		try
+		{
+			contratos = (await Api.ObterContratosAsync()).ToList();
+		}
+		catch
+		{
+			_ultimasAtualizacoes = [];
+			return;
+		}
 
-        var hoje = DateTime.Today;
+		var hoje = DateTime.Today;
 
-        var atrasados = contratos.Where(x => x.Status == 2).ToList();
-        var vencendoHoje = contratos.Where(x => x.DataFim.HasValue && x.DataFim.Value.Date == hoje).ToList();
-        var pagosMes = contratos.Where(x => x.Status == 3 && x.DataInicio.Month == hoje.Month && x.DataInicio.Year == hoje.Year).ToList();
+		var atrasados = contratos.Where(x => x.Status == 2).ToList();
+		var vencendoHoje = contratos.Where(x => x.DataFim.HasValue && x.DataFim.Value.Date == hoje).ToList();
+		var pagosMes = contratos.Where(x => x.Status == 3 && x.DataInicio.Month == hoje.Month && x.DataInicio.Year == hoje.Year).ToList();
 
-        _valorAtrasado = atrasados.Sum(x => x.Valor);
-        _valorHoje = vencendoHoje.Sum(x => x.Valor);
-        _valorPagoMes = pagosMes.Sum(x => x.Valor);
+		_valorAtrasado = atrasados.Sum(x => x.Valor);
+		_valorHoje = vencendoHoje.Sum(x => x.Valor);
+		_valorPagoMes = pagosMes.Sum(x => x.Valor);
 
-        _qtdAtrasados = atrasados.Count;
-        _qtdHoje = vencendoHoje.Count;
-        _qtdPagos = pagosMes.Count;
+		_qtdAtrasados = atrasados.Count;
+		_qtdHoje = vencendoHoje.Count;
+		_qtdPagos = pagosMes.Count;
 
-        _ultimasAtualizacoes = contratos
-            .OrderByDescending(x => x.AtualizadaEmUtc ?? x.CriadoEmUtc)
-            .Take(3)
-            .Select(x => new AtualizacaoItem(
-                $"Contrato {x.Id.ToString()[..8]}",
-                x.Status switch
-                {
-                    2 => "Vencimento: Hoje",
-                    1 => "Pendente",
-                    3 => "Recebido",
-                    _ => "Atualizado"
-                },
-                x.Valor))
-            .ToList();
-    }
+		_ultimasAtualizacoes = contratos
+			.OrderByDescending(x => x.AtualizadaEmUtc ?? x.CriadoEmUtc)
+			.Take(3)
+			.Select(x => new AtualizacaoItem(
+				$"Contrato {x.Id.ToString()[..8]}",
+				x.Status switch
+				{
+					2 => "Vencimento: Hoje",
+					1 => "Pendente",
+					3 => "Recebido",
+					_ => "Atualizado"
+				},
+				x.Valor))
+			.ToList();
+	}
 
-    private void IrParaCobrancas() => Navigation.NavigateTo("/contratos");
+	private void IrParaCobrancas() => Navigation.NavigateTo("/contratos");
 
-    private static string FormatMoeda(decimal valor)
-        => string.Format(new System.Globalization.CultureInfo("pt-BR"), "{0:C}", valor);
+	private static string FormatMoeda(decimal valor)
+		=> string.Format(new System.Globalization.CultureInfo("pt-BR"), "{0:C}", valor);
 
-    private sealed record AtualizacaoItem(string Titulo, string Subtitulo, decimal Valor);
+	private sealed record AtualizacaoItem(string Titulo, string Subtitulo, decimal Valor);
 }

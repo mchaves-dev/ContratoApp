@@ -1,0 +1,58 @@
+﻿.client-card {
+    background: linear-gradient(90deg, #0f172a 0%, #111827 100%);
+    border-radius: 14px;
+    border-left: 4px solid #3b82f6;
+    color: white;
+    min-height: 84px;
+    display: flex;
+    align-items: center;
+}
+
+.client-avatar {
+    width: 52px;
+    height: 52px;
+    font-weight: 700;
+    background: #1e293b;
+    color: white;
+    flex-shrink: 0;
+}
+
+.client-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.client-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.client-phone {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    line-height: 1.2;
+    margin-top: 4px;
+}
+
+.client-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.client-chip {
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    height: 24px;
+    background-color: rgba(59, 130, 246, 0.18) !important;
+    color: #60a5fa !important;
+}
+
+.client-edit-btn {
+    color: #94a3b8 !important;
+}

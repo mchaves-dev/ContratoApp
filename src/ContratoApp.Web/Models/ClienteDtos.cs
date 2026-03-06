@@ -1,24 +1,34 @@
 ﻿namespace ContratoApp.Web.Models;
 
 public sealed record ClienteResponse(
-    Guid Id,
-    string Nome,
-    string Sobrenome,
-    string Email,
-    string Cidade,
-    string Logradouro,
-    string Bairro,
-    string Numero,
-    string Cep,
-    bool Ativo,
-    DateTime CriadoEmUtc);
+	Guid Id,
+	string Nome,
+	string Sobrenome,
+	string Email,
+	string Cidade,
+	string Logradouro,
+	string Bairro,
+	string Numero,
+	string Cep,
+	bool Ativo,
+	DateTime CriadoEmUtc);
+
+public sealed record AtualizarClienteRequest(
+	string Nome,
+	string Sobrenome,
+	string Email,
+	string Cidade,
+	string Logradouro,
+	string Bairro,
+	string Numero,
+	string Cep);
 
 public sealed record CriarClienteRequest(
-    string Nome,
-    string Sobrenome,
-    string Email,
-    string Cidade,
-    string Logradouro,
-    string Bairro,
-    string Numero,
-    string Cep);
+	string Nome,
+	string Sobrenome,
+	string Email,
+	string Cidade,
+	string Logradouro,
+	string Bairro,
+	string Numero,
+	string Cep);

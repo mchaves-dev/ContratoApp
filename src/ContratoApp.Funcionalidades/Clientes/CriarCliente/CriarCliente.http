@@ -1,0 +1,15 @@
+﻿### Criar cliente
+POST https://localhost:7278/api/clientes
+Content-Type: application/json
+
+
+{
+  "nome": "Mauricio",
+  "sobrenome": "Chaves",
+  "email": "host.mauricio@gmail.com",
+  "cidade": "Passo Fundo, RS",
+  "logradouro": "Rua teste",
+  "bairro": "Teste",
+  "numero": "83",
+  "cep": "0000000"
+}

@@ -1,0 +1,14 @@
+﻿PUT https://localhost:7278/api/clientes/{id}
+Content-Type: application/json
+
+{
+  "nome": "Mauricio t",
+  "sobrenome": "Chaves",
+  "email": "host.mauricio@gmail.com",
+  "cidade": "Passo Fundo, RS",
+  "logradouro": "Rua teste",
+  "bairro": "Centro",
+  "numero": "83",
+  "cep": "00000000",
+  "ativo": true
+}
