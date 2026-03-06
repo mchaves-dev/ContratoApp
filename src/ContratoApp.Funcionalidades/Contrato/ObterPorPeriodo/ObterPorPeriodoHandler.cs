@@ -24,7 +24,7 @@ public sealed class ObterContratosPorPeriodoHandler(AppDbContext dbContext) : IO
             .AsNoTracking()
             .Where(x => x.DataInicio >= inicio && x.DataInicio <= fim)
             .OrderBy(x => x.DataInicio)
-            .ToListAsync(cancellationToken)
+            .ToListAsync()
             .ConfigureAwait(false);
 
         var response = contratos

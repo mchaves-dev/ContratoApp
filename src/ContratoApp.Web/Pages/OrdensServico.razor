@@ -25,7 +25,12 @@
                     <MudChip T="string" Size="Size.Small" Color="@StatusColor(ClassificarStatusOrdem(ordem))">@StatusLabel(ClassificarStatusOrdem(ordem))</MudChip>
                 </MudStack>
                 <MudDivider Class="my-2" />
-                <MudText Typo="Typo.body2">@ordem.Observacoes</MudText>
+                <MudText Typo="Typo.body2" Class="mb-2">@ordem.Observacoes</MudText>
+                <MudStack Row="true" Justify="Justify.FlexEnd">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Outlined.Edit" OnClick="() => AbrirEdicaoAsync(ordem)">
+                        Editar
+                    </MudButton>
+                </MudStack>
             </MudPaper>
         </MudItem>
     }
@@ -63,14 +68,105 @@
     </DialogActions>
 </MudDialog>
 
+<MudDialog @bind-Visible="_dialogEdicaoOpen" Options="_dialogEditOptions">
+    <DialogContent>
+        @if (_edicao is not null)
+        {
+            <MudText Typo="Typo.h6" Class="mb-2">Editar ordem</MudText>
+            <MudStack Spacing="2" Class="mb-3">
+                <MudSelect T="Guid" Label="Cliente" @bind-Value="_edicao.IdCliente" Variant="Variant.Outlined">
+                    @foreach (var cliente in _clientesTodos)
+                    {
+                        <MudSelectItem Value="@cliente.Id">@cliente.Nome @cliente.Sobrenome</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudDatePicker Label="Data Abertura" @bind-Date="_edicao.DataAbertura" Variant="Variant.Outlined" />
+                <MudDatePicker Label="Data Fechamento (opcional)" @bind-Date="_edicao.DataFechamento" Variant="Variant.Outlined" />
+                <MudTextField T="string" Label="Observações" @bind-Value="_edicao.Observacoes" Variant="Variant.Outlined" />
+            </MudStack>
+
+            <MudDivider Class="my-3" />
+            <MudText Typo="Typo.subtitle1" Class="mb-2">Itens da ordem</MudText>
+
+            @if (_dialogErrors.Count > 0)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="mb-2">
+                    @foreach (var error in _dialogErrors)
+                    {
+                        <div>@error</div>
+                    }
+                </MudAlert>
+            }
+
+            <MudGrid>
+                <MudItem xs="12" md="5">
+                    <MudPaper Class="pa-3 form-panel" Elevation="0">
+                        <MudStack Spacing="2">
+                            <MudTextField T="string" Label="Descrição" @bind-Value="_novoItemEdicao.Descricao" Variant="Variant.Outlined" />
+                            <MudNumericField T="int" Label="Quantidade" @bind-Value="_novoItemEdicao.Quantidade" Variant="Variant.Outlined" Min="1" />
+                            <MudNumericField T="decimal" Label="Valor Unitário" @bind-Value="_novoItemEdicao.ValorUnitario" Variant="Variant.Outlined" Min="0" />
+                            <MudSelect T="int" Label="Tipo" @bind-Value="_novoItemEdicao.Tipo" Variant="Variant.Outlined">
+                                <MudSelectItem Value="1">Mão de Obra</MudSelectItem>
+                                <MudSelectItem Value="2">Peça</MudSelectItem>
+                            </MudSelect>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@_adicionandoItem" OnClick="AdicionarItemEdicaoAsync">
+                                Adicionar item
+                            </MudButton>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" md="7">
+                    <MudPaper Class="pa-3 data-panel" Elevation="0">
+                        @if (_carregandoItens)
+                        {
+                            <MudProgressCircular Indeterminate="true" Size="Size.Medium" Class="my-2" />
+                        }
+                        else
+                        {
+                            <MudTable Items="_itensEdicao" Dense="true" Hover="true">
+                                <HeaderContent>
+                                    <MudTh>Descrição</MudTh>
+                                    <MudTh>Qtd</MudTh>
+                                    <MudTh>Valor Unit.</MudTh>
+                                    <MudTh>Tipo</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>@context.Descricao</MudTd>
+                                    <MudTd>@context.Quantidade</MudTd>
+                                    <MudTd>@FormatMoeda(context.ValorUnitario)</MudTd>
+                                    <MudTd>@TipoItemLabel(context.Tipo)</MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="FecharEdicao">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@_salvandoEdicao" OnClick="SalvarEdicaoAsync">Salvar alterações</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     private readonly DialogOptions _dialogOptions = new() { CloseButton = true, FullWidth = true, MaxWidth = MaxWidth.Small };
+    private readonly DialogOptions _dialogEditOptions = new() { CloseButton = true, FullWidth = true, MaxWidth = MaxWidth.Large };
     private bool _dialogOpen;
+    private bool _dialogEdicaoOpen;
+    private bool _salvandoEdicao;
+    private bool _adicionandoItem;
+    private bool _carregandoItens;
     private string _busca = string.Empty;
     private List<string> _errors = [];
+    private List<string> _dialogErrors = [];
     private List<ContratoApp.Web.Models.ClienteResponse> _clientesTodos = [];
     private List<ContratoApp.Web.Models.OrdemServicoResponse> _ordens = [];
+    private List<ContratoApp.Web.Models.OrdemServicoItemResponse> _itensEdicao = [];
     private NovaOrdemModel _novo = new();
+    private OrdemEdicaoModel? _edicao;
+    private NovoItemEdicaoModel _novoItemEdicao = new();
 
     protected override Task OnInitializedAsync() => CarregarAsync();
 
@@ -121,6 +217,128 @@
         await CarregarAsync();
     }
 
+    private async Task AbrirEdicaoAsync(ContratoApp.Web.Models.OrdemServicoResponse ordem)
+    {
+        _dialogErrors.Clear();
+        _edicao = new OrdemEdicaoModel
+        {
+            Id = ordem.Id,
+            IdCliente = ordem.IdCliente,
+            DataAbertura = ordem.DataAbertura,
+            DataFechamento = ordem.DataFechamento,
+            Observacoes = ordem.Observacoes,
+            StatusAtual = ordem.Status
+        };
+
+        _dialogEdicaoOpen = true;
+        await CarregarItensEdicaoAsync();
+    }
+
+    private void FecharEdicao()
+    {
+        _dialogEdicaoOpen = false;
+        _edicao = null;
+        _itensEdicao = [];
+        _novoItemEdicao = new NovoItemEdicaoModel();
+        _dialogErrors.Clear();
+    }
+
+    private async Task SalvarEdicaoAsync()
+    {
+        if (_edicao is null)
+            return;
+
+        _dialogErrors.Clear();
+
+        if (_edicao.IdCliente == Guid.Empty)
+        {
+            _dialogErrors.Add("Selecione um cliente.");
+            return;
+        }
+
+        _salvandoEdicao = true;
+        try
+        {
+            var dataAbertura = _edicao.DataAbertura ?? DateTime.Today;
+            var status = ClassificarStatusOrdem(dataAbertura, _edicao.DataFechamento, _edicao.StatusAtual);
+
+            var request = new ContratoApp.Web.Models.AtualizarOrdemServicoRequest(
+                _edicao.IdCliente,
+                dataAbertura,
+                _edicao.DataFechamento,
+                status,
+                _edicao.Observacoes);
+
+            var result = await Api.AtualizarOrdemServicoAsync(_edicao.Id, request);
+            if (!result.Success)
+            {
+                _dialogErrors = result.Errors.ToList();
+                return;
+            }
+
+            FecharEdicao();
+            await CarregarAsync();
+        }
+        finally
+        {
+            _salvandoEdicao = false;
+        }
+    }
+
+    private async Task CarregarItensEdicaoAsync()
+    {
+        if (_edicao is null)
+            return;
+
+        _carregandoItens = true;
+        try
+        {
+            _itensEdicao = (await Api.ObterItensPorOrdemServicoAsync(_edicao.Id)).ToList();
+        }
+        finally
+        {
+            _carregandoItens = false;
+        }
+    }
+
+    private async Task AdicionarItemEdicaoAsync()
+    {
+        if (_edicao is null)
+            return;
+
+        _dialogErrors.Clear();
+
+        if (string.IsNullOrWhiteSpace(_novoItemEdicao.Descricao))
+        {
+            _dialogErrors.Add("Informe a descrição do item.");
+            return;
+        }
+
+        _adicionandoItem = true;
+        try
+        {
+            var result = await Api.AdicionarItemAsync(new ContratoApp.Web.Models.AdicionarOrdemServicoItemRequest(
+                _edicao.Id,
+                _novoItemEdicao.Descricao,
+                _novoItemEdicao.Quantidade,
+                _novoItemEdicao.ValorUnitario,
+                _novoItemEdicao.Tipo));
+
+            if (!result.Success)
+            {
+                _dialogErrors = result.Errors.ToList();
+                return;
+            }
+
+            _novoItemEdicao = new NovoItemEdicaoModel();
+            await CarregarItensEdicaoAsync();
+        }
+        finally
+        {
+            _adicionandoItem = false;
+        }
+    }
+
     private string NomeCliente(Guid idCliente)
         => _clientesTodos.FirstOrDefault(c => c.Id == idCliente) is { } c ? $"{c.Nome} {c.Sobrenome}" : idCliente.ToString()[..8];
 
@@ -159,6 +377,16 @@
         _ => Color.Default
     };
 
+    private static string TipoItemLabel(int tipo) => tipo switch
+    {
+        1 => "Mão de Obra",
+        2 => "Peça",
+        _ => "Outro"
+    };
+
+    private static string FormatMoeda(decimal valor)
+        => string.Format(new System.Globalization.CultureInfo("pt-BR"), "{0:C}", valor);
+
     private sealed class NovaOrdemModel
     {
         public Guid IdCliente { get; set; } = Guid.Empty;
@@ -166,7 +394,22 @@
         public DateTime? DataFechamento { get; set; }
         public string Observacoes { get; set; } = string.Empty;
     }
+
+    private sealed class OrdemEdicaoModel
+    {
+        public Guid Id { get; set; }
+        public Guid IdCliente { get; set; }
+        public DateTime? DataAbertura { get; set; }
+        public DateTime? DataFechamento { get; set; }
+        public string Observacoes { get; set; } = string.Empty;
+        public int StatusAtual { get; set; }
+    }
+
+    private sealed class NovoItemEdicaoModel
+    {
+        public string Descricao { get; set; } = string.Empty;
+        public int Quantidade { get; set; } = 1;
+        public decimal ValorUnitario { get; set; }
+        public int Tipo { get; set; } = 1;
+    }
 }
-
-
-

@@ -32,3 +32,4 @@ internal static class StatusClassifier
         return EStatusOrdemServico.Aberta;
     }
 }
+

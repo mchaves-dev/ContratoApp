@@ -20,3 +20,13 @@ public sealed record CriarContratoRequest(
     DateTime? DataFim,
     int Status,
     string Observacoes);
+
+public sealed record AtualizarContratoRequest(
+    Guid IdCliente,
+    int Tipo,
+    decimal Valor,
+    DateTime DataInicio,
+    DateTime? DataFim,
+    int Status,
+    string Observacoes);
+

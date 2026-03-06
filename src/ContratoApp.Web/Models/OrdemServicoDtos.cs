@@ -16,3 +16,10 @@ public sealed record CriarOrdemServicoRequest(
     DateTime? DataFechamento,
     int Status,
     string Observacoes);
+
+public sealed record AtualizarOrdemServicoRequest(
+    Guid IdCliente,
+    DateTime DataAbertura,
+    DateTime? DataFechamento,
+    int Status,
+    string Observacoes);

@@ -44,8 +44,12 @@
                 </MudStack>
                 <MudDivider Class="my-2" />
                 <MudStack Row="true" Spacing="1" Class="billing-actions">
-                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Outlined.Receipt" Class="billing-action-btn">Cobrar</MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Check" Class="billing-action-btn">Pago</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Outlined.Receipt" Class="billing-action-btn" Disabled="@_atualizando.Contains(contrato.Id)" OnClick="() => CobrarAsync(contrato)">
+                        Cobrar
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Check" Class="billing-action-btn" Disabled="@_atualizando.Contains(contrato.Id)" OnClick="() => MarcarPagoAsync(contrato)">
+                        Pago
+                    </MudButton>
                 </MudStack>
             </MudPaper>
         </MudItem>
@@ -107,6 +111,7 @@
     private List<string> _errors = [];
     private List<ContratoApp.Web.Models.ClienteResponse> _clientesTodos = [];
     private List<ContratoApp.Web.Models.ContratoResponse> _contratos = [];
+    private readonly HashSet<Guid> _atualizando = [];
     private NovoContratoModel _novo = new();
 
     protected override Task OnInitializedAsync() => CarregarAsync();
@@ -149,6 +154,46 @@
         };
 
         return query.OrderByDescending(x => x.AtualizadaEmUtc ?? x.CriadoEmUtc);
+    }
+
+    private Task CobrarAsync(ContratoApp.Web.Models.ContratoResponse contrato)
+        => AtualizarStatusAsync(contrato, 2);
+
+    private Task MarcarPagoAsync(ContratoApp.Web.Models.ContratoResponse contrato)
+        => AtualizarStatusAsync(contrato, 3);
+
+    private async Task AtualizarStatusAsync(ContratoApp.Web.Models.ContratoResponse contrato, int status)
+    {
+        _errors.Clear();
+
+        if (_atualizando.Contains(contrato.Id))
+            return;
+
+        _atualizando.Add(contrato.Id);
+        try
+        {
+            var request = new ContratoApp.Web.Models.AtualizarContratoRequest(
+                contrato.IdCliente,
+                contrato.Tipo,
+                contrato.Valor,
+                contrato.DataInicio,
+                contrato.DataFim,
+                status,
+                contrato.Observacoes);
+
+            var result = await Api.AtualizarContratoAsync(contrato.Id, request);
+            if (!result.Success)
+            {
+                _errors = result.Errors.ToList();
+                return;
+            }
+
+            await CarregarAsync();
+        }
+        finally
+        {
+            _atualizando.Remove(contrato.Id);
+        }
     }
 
     private async Task CriarAsync()
@@ -229,6 +274,3 @@
         public string Observacoes { get; set; } = string.Empty;
     }
 }
-
-
-
